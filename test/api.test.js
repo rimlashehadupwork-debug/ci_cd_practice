@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import request from "supertest";
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const request = require("supertest");
 
-import app from "../src/app.js";
+const app = require("../server");
 
 test("GET /health works", async () => {
   const response = await request(app)
