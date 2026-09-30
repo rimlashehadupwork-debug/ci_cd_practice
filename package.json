@@ -1,28 +1,17 @@
 {
   "name": "ci_cd_practice",
   "version": "1.0.0",
-  "description": "CRUD API with automated testing and Vercel deployment",
+  "description": "CRUD API",
   "main": "server.js",
   "scripts": {
     "test": "node --test",
     "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rimlashehadupwork-debug/ci_cd_practice.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/rimlashehadupwork-debug/ci_cd_practice/issues"
-  },
-  "homepage": "https://github.com/rimlashehadupwork-debug/ci_cd_practice#readme",
   "dependencies": {
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "supertest": "^7.3.0"
+    "supertest": "^7.1.4"
   }
 }
