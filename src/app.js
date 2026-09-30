@@ -1,135 +1,75 @@
-import express from "express";
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const request = require("supertest");
 
-const app = express();
+const app = require("../server");
 
-app.use(express.json());
+test("GET /health works", async () => {
+  const response = await request(app).get("/health");
 
-let nextId = 3;
-
-let items = [
-  {
-    id: 1,
-    name: "First item",
-    description: "Example record"
-  },
-  {
-    id: 2,
-    name: "Second item",
-    description: "Another example"
-  }
-];
-
-// Home
-app.get("/", (req, res) => {
-  res.json({
-    name: "CRUD API",
-    status: "ok",
-    endpoints: {
-      health: "GET /health",
-      list: "GET /api/items",
-      get: "GET /api/items/:id",
-      create: "POST /api/items",
-      update: "PUT /api/items/:id",
-      delete: "DELETE /api/items/:id"
-    }
-  });
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.status, "ok");
 });
 
-// Health check
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok"
-  });
+test("GET /api/items returns an array", async () => {
+  const response = await request(app).get("/api/items");
+
+  assert.equal(response.statusCode, 200);
+  assert.ok(Array.isArray(response.body));
 });
 
-// READ all
-app.get("/api/items", (req, res) => {
-  res.json(items);
+test("GET /api/items/:id returns an item", async () => {
+  const response = await request(app).get("/api/items/1");
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.id, 1);
 });
 
-// READ one
-app.get("/api/items/:id", (req, res) => {
-  const item = items.find(
-    (item) => item.id === Number(req.params.id)
-  );
+test("GET unknown item returns 404", async () => {
+  const response = await request(app).get("/api/items/999999");
 
-  if (!item) {
-    return res.status(404).json({
-      error: "Item not found"
+  assert.equal(response.statusCode, 404);
+});
+
+test("POST /api/items creates an item", async () => {
+  const response = await request(app)
+    .post("/api/items")
+    .send({
+      name: "Automated Test Item",
+      description: "Created by automated test"
     });
-  }
 
-  res.json(item);
+  assert.equal(response.statusCode, 201);
+  assert.equal(response.body.name, "Automated Test Item");
+  assert.ok(response.body.id);
 });
 
-// CREATE
-app.post("/api/items", (req, res) => {
-  const { name, description = "" } = req.body ?? {};
-
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({
-      error: "name is required"
+test("POST /api/items rejects missing name", async () => {
+  const response = await request(app)
+    .post("/api/items")
+    .send({
+      description: "Missing name"
     });
-  }
 
-  const item = {
-    id: nextId++,
-    name,
-    description
-  };
-
-  items.push(item);
-
-  res.status(201).json(item);
+  assert.equal(response.statusCode, 400);
 });
 
-// UPDATE
-app.put("/api/items/:id", (req, res) => {
-  const index = items.findIndex(
-    (item) => item.id === Number(req.params.id)
-  );
-
-  if (index === -1) {
-    return res.status(404).json({
-      error: "Item not found"
+test("PUT /api/items/:id updates an item", async () => {
+  const response = await request(app)
+    .put("/api/items/1")
+    .send({
+      name: "Updated Item",
+      description: "Updated by automated test"
     });
-  }
 
-  const { name, description = "" } = req.body ?? {};
-
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({
-      error: "name is required"
-    });
-  }
-
-  items[index] = {
-    ...items[index],
-    name,
-    description
-  };
-
-  res.json(items[index]);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.name, "Updated Item");
 });
 
-// DELETE
-app.delete("/api/items/:id", (req, res) => {
-  const index = items.findIndex(
-    (item) => item.id === Number(req.params.id)
-  );
+test("DELETE /api/items/:id deletes an item", async () => {
+  const response = await request(app)
+    .delete("/api/items/2");
 
-  if (index === -1) {
-    return res.status(404).json({
-      error: "Item not found"
-    });
-  }
-
-  const [deleted] = items.splice(index, 1);
-
-  res.json({
-    message: "Item deleted",
-    item: deleted
-  });
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.message, "Item deleted");
 });
-
-export default app;
